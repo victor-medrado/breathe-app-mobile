@@ -1,28 +1,18 @@
-import { useRouter } from "expo-router";
 import { Pressable } from "react-native";
 import styled from "styled-components/native";
 import { IconSymbol, IconSymbolName } from "./ui/IconSymbol";
 
 interface ICardProps {
-  id: string;
   title: string;
   description?: string;
   icon?: string;
   tags?: string[];
+  onPress?: () => void;
 }
 
-export function Card({ id, title, description, icon, tags }: ICardProps) {
-  const router = useRouter();
-
-  const handlePress = () => {
-    router.push({
-      pathname: "/breathing",
-      params: { id: id },
-    });
-  };
-
+export function Card({ title, description, icon, tags, onPress }: ICardProps) {
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable onPress={onPress}>
       <CardContainer>
         <CardHeader>
           {icon && (

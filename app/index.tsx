@@ -1,10 +1,30 @@
 import { Card } from "@/components/Card";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { breathingTechniques } from "@/data/techniques";
+import { setTechnique } from "@/store/breathingSlice";
+import { useRouter } from "expo-router";
 import { View } from "react-native";
+import { useDispatch } from "react-redux";
 import styled from "styled-components/native";
 
 export default function HomeScreen() {
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  const handlePress = (id: string) => {
+    const selectedTechnique = breathingTechniques.find(
+      (tech) => tech.id === id
+    );
+
+    if (selectedTechnique) {
+      dispatch(setTechnique(selectedTechnique));
+      router.push({
+        pathname: "/breathing",
+        params: { id: selectedTechnique.id },
+      });
+    }
+  };
+
   return (
     <MainContainer>
       <Container>
@@ -23,11 +43,11 @@ export default function HomeScreen() {
           {breathingTechniques.map((technique) => (
             <Card
               key={technique.id}
-              id={technique.id}
               title={technique.title}
               description={technique.description}
               icon={technique.icon}
               tags={technique.tags}
+              onPress={() => handlePress(technique.id)}
             />
           ))}
         </Grid>
