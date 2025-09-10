@@ -24,6 +24,10 @@ const MAPPING = {
   wind: "air",
   square: "crop-square",
   sparkles: "local-florist",
+  "arrow.counterclockwise": "sync",
+  pause: "pause",
+  play: "play-arrow",
+  "chevron.left": "arrow-back-ios",
 } as IconMapping;
 
 /**
