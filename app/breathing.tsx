@@ -1,8 +1,15 @@
 import { IconSymbol, IconSymbolName } from "@/components/ui/IconSymbol";
+import { useGlowAnimation } from "@/hooks/useGlowAnimation";
 import { RootState } from "@/store";
-import { pause, restart, resume } from "@/store/breathingSlice";
+import { pause, restart, resume, tick } from "@/store/breathingSlice";
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { Pressable } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components/native";
 
@@ -17,8 +24,104 @@ export default function BreathingScreen() {
     currentStep,
     stepElapsed,
   } = useSelector((state: RootState) => state.breathing);
+  const circleScale = useSharedValue(1);
+  const textOpacity = useSharedValue(0);
+  const textPosition = useSharedValue(10);
+  const glowProgress = useSharedValue(0);
+
+  const animatedCircleStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: circleScale.value }],
+    };
+  });
+
+  const animatedTextStyle = useAnimatedStyle(() => {
+    return {
+      opacity: textOpacity.value,
+      transform: [{ translateY: textPosition.value }],
+    };
+  });
+
+  const animatedGlowStyle1 = useGlowAnimation(glowProgress, 1);
+  const animatedGlowStyle2 = useGlowAnimation(glowProgress, 2);
+  const animatedGlowStyle3 = useGlowAnimation(glowProgress, 3);
+  const animatedGlowStyle4 = useGlowAnimation(glowProgress, 4);
+  const animatedGlowStyle5 = useGlowAnimation(glowProgress, 5);
+
+  useEffect(() => {
+    if (!isRunning) return;
+
+    const interval = setInterval(() => {
+      dispatch(tick());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isRunning, dispatch]);
+
+  useEffect(() => {
+    if (!isRunning || !technique) return;
+
+    const current = technique.sequence[currentStep];
+
+    let newScale = 1;
+
+    if (current.action === "inhale") {
+      newScale = 1.5;
+    } else if (current.action === "exhale") {
+      newScale = 1;
+    } else if (current.action === "hold") {
+      newScale = getHoldScale();
+    }
+
+    circleScale.value = withTiming(newScale, {
+      duration: current.duration * 1000,
+    });
+
+    let newGlowProgress = 0;
+
+    if (current.action === "inhale") {
+      newGlowProgress = 1;
+    } else if (current.action === "exhale") {
+      newGlowProgress = 0;
+    } else if (current.action === "hold") {
+      const prevStep =
+        currentStep > 0
+          ? technique.sequence[currentStep - 1]
+          : technique.sequence[technique.sequence.length - 1];
+
+      newGlowProgress =
+        prevStep.action === "inhale" || prevStep.action === "hold" ? 1 : 0;
+    }
+
+    glowProgress.value = withTiming(newGlowProgress, {
+      duration: current.duration * 1000,
+    });
+
+    if (stepElapsed === 0) {
+      textOpacity.value = withTiming(1, { duration: 500 });
+      textPosition.value = withTiming(0, { duration: 500 });
+    }
+
+    if (stepElapsed === current.duration - 1) {
+      textOpacity.value = withTiming(0, { duration: 500 });
+      textPosition.value = withTiming(-10, { duration: 500 });
+    }
+  }, [currentStep, isRunning, stepElapsed]);
 
   if (!technique) return null;
+
+  const current = technique.sequence[currentStep];
+  const remainingTime = technique.sequence[currentStep].duration - stepElapsed;
+
+  const prevStep =
+    currentStep > 0
+      ? technique.sequence[currentStep - 1]
+      : technique.sequence[technique.sequence.length - 1];
+
+  function getHoldScale() {
+    if (current.action !== "hold") return 1;
+    return prevStep.action === "inhale" ? 1.5 : 1;
+  }
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
@@ -41,9 +144,6 @@ export default function BreathingScreen() {
     return actions[key];
   };
 
-  const current = technique.sequence[currentStep];
-  const remainingTime = technique.sequence[currentStep].duration - stepElapsed;
-
   return (
     <MainContainer>
       <Container>
@@ -58,10 +158,22 @@ export default function BreathingScreen() {
           <HeaderParagraph>{technique.description}</HeaderParagraph>
         </Header>
 
-        <TextContainer>
-          <Label>{translateBreatheAction(current.action).toUpperCase()}</Label>
-          <Label>{remainingTime}</Label>
-        </TextContainer>
+        <AnimationContainer>
+          <GlowCircle style={animatedGlowStyle1} />
+          <GlowCircle style={animatedGlowStyle2} />
+          <GlowCircle style={animatedGlowStyle3} />
+          <GlowCircle style={animatedGlowStyle4} />
+          <GlowCircle style={animatedGlowStyle5} />
+
+          <AnimatedView style={animatedCircleStyle}>
+            <TextContainer>
+              <Label style={animatedTextStyle}>
+                {translateBreatheAction(current.action).toUpperCase()}
+              </Label>
+              <Label>{remainingTime}</Label>
+            </TextContainer>
+          </AnimatedView>
+        </AnimationContainer>
 
         <CounterContainer>
           <Counter>
@@ -189,7 +301,7 @@ export const TextContainer = styled.View`
   color: #cec7bb;
 `;
 
-export const Label = styled.Text`
+export const Label = styled(Animated.Text)`
   font-size: 18px;
   font-weight: bold;
   text-transform: uppercase;
@@ -212,4 +324,29 @@ export const TextButton = styled.Text`
   font-weight: 600;
   text-transform: uppercase;
   color: #282828;
+`;
+
+export const AnimationContainer = styled.View`
+  position: relative;
+  align-self: center;
+  width: 200px;
+  height: 200px;
+`;
+
+export const AnimatedView = styled(Animated.View)`
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background-color: #282828;
+  align-self: center;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const GlowCircle = styled(Animated.View)`
+  width: 200px;
+  height: 200px;
+  border-radius: 999px;
+  position: absolute;
+  background-color: #cec7bb;
 `;
