@@ -1,10 +1,10 @@
 import { IconSymbol, IconSymbolName } from "@/components/ui/IconSymbol";
 import { useGlowAnimation } from "@/hooks/useGlowAnimation";
 import { RootState } from "@/store";
-import { pause, restart, resume, tick } from "@/store/breathingSlice";
+import { pause, reset, restart, resume, tick } from "@/store/breathingSlice";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
-import { Pressable } from "react-native";
+import { Pressable, Vibration } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -55,7 +55,10 @@ export default function BreathingScreen() {
       dispatch(tick());
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      Vibration.cancel();
+    };
   }, [isRunning, dispatch]);
 
   useEffect(() => {
@@ -63,8 +66,9 @@ export default function BreathingScreen() {
 
     const current = technique.sequence[currentStep];
 
-    let newScale = 1;
+    Vibration.vibrate(50);
 
+    let newScale = 1;
     if (current.action === "inhale") {
       newScale = 1.5;
     } else if (current.action === "exhale") {
@@ -78,7 +82,6 @@ export default function BreathingScreen() {
     });
 
     let newGlowProgress = 0;
-
     if (current.action === "inhale") {
       newGlowProgress = 1;
     } else if (current.action === "exhale") {
@@ -97,16 +100,9 @@ export default function BreathingScreen() {
       duration: current.duration * 1000,
     });
 
-    if (stepElapsed === 0) {
-      textOpacity.value = withTiming(1, { duration: 500 });
-      textPosition.value = withTiming(0, { duration: 500 });
-    }
-
-    if (stepElapsed === current.duration - 1) {
-      textOpacity.value = withTiming(0, { duration: 500 });
-      textPosition.value = withTiming(-10, { duration: 500 });
-    }
-  }, [currentStep, isRunning, stepElapsed]);
+    textOpacity.value = withTiming(1, { duration: 500 });
+    textPosition.value = withTiming(0, { duration: 500 });
+  }, [currentStep, isRunning, technique]);
 
   if (!technique) return null;
 
@@ -132,6 +128,7 @@ export default function BreathingScreen() {
   };
 
   const handleBack = () => {
+    dispatch(reset());
     router.push("/");
   };
 
@@ -165,14 +162,24 @@ export default function BreathingScreen() {
           <GlowCircle style={animatedGlowStyle4} />
           <GlowCircle style={animatedGlowStyle5} />
 
-          <AnimatedView style={animatedCircleStyle}>
-            <TextContainer>
-              <Label style={animatedTextStyle}>
-                {translateBreatheAction(current.action).toUpperCase()}
-              </Label>
-              <Label>{remainingTime}</Label>
-            </TextContainer>
-          </AnimatedView>
+          {!isRunning ? (
+            <Pressable onPress={() => dispatch(resume())}>
+              <AnimatedView>
+                <TextContainer>
+                  <Label>Iniciar</Label>
+                </TextContainer>
+              </AnimatedView>
+            </Pressable>
+          ) : (
+            <AnimatedView style={animatedCircleStyle}>
+              <TextContainer>
+                <Label style={animatedTextStyle}>
+                  {translateBreatheAction(current.action).toUpperCase()}
+                </Label>
+                <Label>{remainingTime}</Label>
+              </TextContainer>
+            </AnimatedView>
+          )}
         </AnimationContainer>
 
         <CounterContainer>
@@ -193,7 +200,7 @@ export default function BreathingScreen() {
           >
             <StyledButton>
               <IconSymbol name={isRunning ? "pause" : "play"} color="#282828" />
-              <TextButton>{isRunning ? "Pausar" : "Retomar"}</TextButton>
+              <TextButton>{isRunning ? "Pausar" : "Iniciar"}</TextButton>
             </StyledButton>
           </Pressable>
 
@@ -229,7 +236,7 @@ export const Container = styled.View`
 `;
 
 export const Header = styled.View`
-  margin-bottom: 160px;
+  margin-bottom: 80px;
 `;
 
 export const HeaderIcon = styled.View`
@@ -264,7 +271,7 @@ export const HeaderParagraph = styled.Text`
 `;
 
 export const CounterContainer = styled.View`
-  margin-top: 160px;
+  margin-top: 80px;
   flex-direction: row;
   gap: 16px;
   align-items: center;
@@ -290,7 +297,6 @@ export const CounterLabel = styled.Text`
 
 export const ButtonContainer = styled.View`
   gap: 8px;
-  margin-top: 32px;
 `;
 
 export const TextContainer = styled.View`
