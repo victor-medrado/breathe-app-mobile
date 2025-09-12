@@ -62,7 +62,7 @@ export const MainContainer = styled.ScrollView`
 `;
 
 export const Container = styled.View`
-  padding: 32px;
+  padding: 60px 32px;
   gap: 32px;
   max-width: 560px;
   align-self: center;

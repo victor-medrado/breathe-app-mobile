@@ -27,8 +27,9 @@ export default function RootLayout() {
     <Provider store={store}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack>
-          <Stack.Screen name="index" options={{ title: "Home" }} />
-          <Stack.Screen name="breathing" options={{ title: "Respiração" }} />
+          <Stack.Screen name="splashScreen" options={{headerShown: false}} />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="breathing" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />

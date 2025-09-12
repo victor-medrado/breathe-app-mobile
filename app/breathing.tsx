@@ -230,7 +230,7 @@ export const MainContainer = styled.ScrollView`
 
 export const Container = styled.View`
   margin: 0 auto;
-  padding: 32px 16px;
+  padding: 60px 32px;
   gap: 20px;
   background-color: #282828;
 `;
@@ -260,6 +260,7 @@ export const HeaderTitle = styled.Text`
   margin-bottom: 8px;
   color: #cec7bb;
   align-self: center;
+  text-align: center;
 `;
 
 export const HeaderParagraph = styled.Text`
