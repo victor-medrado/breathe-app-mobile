@@ -1,9 +1,10 @@
 import { IconSymbol, IconSymbolName } from "@/components/ui/IconSymbol";
 import { useGlowAnimation } from "@/hooks/useGlowAnimation";
 import { RootState } from "@/store";
-import { pause, reset, restart, resume, tick } from "@/store/breathingSlice";
+import { restart, start, stop, tick } from "@/store/breathingSlice";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Pressable, Vibration } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -48,18 +49,20 @@ export default function BreathingScreen() {
   const animatedGlowStyle4 = useGlowAnimation(glowProgress, 4);
   const animatedGlowStyle5 = useGlowAnimation(glowProgress, 5);
 
-  useEffect(() => {
-    if (!isRunning) return;
+  useFocusEffect(
+    useCallback(() => {
+      if (!isRunning) return;
 
-    const interval = setInterval(() => {
-      dispatch(tick());
-    }, 1000);
+      const interval = setInterval(() => {
+        dispatch(tick());
+      }, 1000);
 
-    return () => {
-      clearInterval(interval);
-      Vibration.cancel();
-    };
-  }, [isRunning, dispatch]);
+      return () => {
+        clearInterval(interval);
+        Vibration.cancel();
+      };
+    }, [isRunning, dispatch])
+  );
 
   useEffect(() => {
     if (!isRunning || !technique) return;
@@ -128,7 +131,7 @@ export default function BreathingScreen() {
   };
 
   const handleBack = () => {
-    dispatch(reset());
+    dispatch(stop());
     router.push("/");
   };
 
@@ -163,7 +166,7 @@ export default function BreathingScreen() {
           <GlowCircle style={animatedGlowStyle5} />
 
           {!isRunning ? (
-            <Pressable onPress={() => dispatch(resume())}>
+            <Pressable onPress={() => dispatch(start())}>
               <AnimatedView>
                 <TextContainer>
                   <Label>Iniciar</Label>
@@ -196,7 +199,7 @@ export default function BreathingScreen() {
 
         <ButtonContainer>
           <Pressable
-            onPress={() => (isRunning ? dispatch(pause()) : dispatch(resume()))}
+            onPress={() => (isRunning ? dispatch(stop()) : dispatch(start()))}
           >
             <StyledButton>
               <IconSymbol name={isRunning ? "pause" : "play"} color="#282828" />
