@@ -1,22 +1,33 @@
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useRouter } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
+import { Animated, Easing } from "react-native";
 import styled from "styled-components/native";
 
 export default function SplashScreen() {
   const router = useRouter();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    setTimeout(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1500,
+      easing: Easing.ease,
+      useNativeDriver: true,
+    }).start();
+
+    const timer = setTimeout(() => {
       router.push("/");
     }, 3000);
-  }, [router]);
+
+    return () => clearTimeout(timer);
+  }, [router, fadeAnim]);
 
   return (
     <MainContainer>
-      <HeaderIcon>
-        <IconSymbol name="wind" color="#cec7bb" />
-      </HeaderIcon>
+      <AnimatedSplashImage
+        source={require("../assets/images/animated.png")}
+        style={{ opacity: fadeAnim }}
+      />
       <HeaderTitle>Breathe</HeaderTitle>
     </MainContainer>
   );
@@ -49,4 +60,10 @@ export const HeaderTitle = styled.Text`
   line-height: 24px;
   color: #cec7bb;
   align-self: center;
+`;
+
+const AnimatedSplashImage = styled(Animated.Image)`
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
 `;

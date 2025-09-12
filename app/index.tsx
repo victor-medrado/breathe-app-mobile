@@ -1,5 +1,4 @@
 import { Card } from "@/components/Card";
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import { breathingTechniques } from "@/data/techniques";
 import { setTechnique } from "@/store/breathingSlice";
 import { useRouter } from "expo-router";
@@ -30,7 +29,9 @@ export default function HomeScreen() {
       <Container>
         <View>
           <HeaderAppName>
-            <IconSymbol name="wind" color="#cec7bb" />
+            <CustomImage
+              source={require("../assets/images/breathe.png")}
+            />
             <AppNameText>Breathe</AppNameText>
           </HeaderAppName>
 
@@ -80,6 +81,11 @@ export const HeaderAppName = styled.View`
   border-color: rgba(206, 199, 187, 0.55);
   margin-bottom: 16px;
   align-self: center;
+`;
+
+export const CustomImage = styled.Image`
+  width: 24px;
+  height: 18px;
 `;
 
 export const AppNameText = styled.Text`

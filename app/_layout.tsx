@@ -30,7 +30,6 @@ export default function RootLayout() {
           <Stack.Screen name="splashScreen" options={{headerShown: false}} />
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="breathing" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>
